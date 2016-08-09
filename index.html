@@ -40,16 +40,19 @@ function start(){
 		for(var wp = 1; wp < path.length; wp++){
 			distance = Math.sqrt((path[wp][0] - path[wp-1][0]) * (path[wp][0] - path[wp-1][0]) + (path[wp][1] - path[wp-1][1]) * (path[wp][1] - path[wp-1][1]));
 			tween.to({ x: path[wp][0], y: path[wp][1] }, distance*SpeedGamingConstant, "Linear");
-			ntween = game.add.tween(star)
-			tween.chain(ntween);
-    		tween.onStart.add(function(wp_){
+			tween.onStart.add(function(wp_){
     			return function(thing, tweenref){
-    				thing.rotation = Phaser.Math.angleBetween(path[wp_-1][0], path[wp_-1][1], 
-    				path[wp_][0], path[wp_][1]);
+    				thing.rotation = Phaser.Math.angleBetween(path[wp_][0], path[wp_][1],
+    				path[wp_-1][0], path[wp_-1][1]);
     				console.log(tweenref.current);
     			}
-    		}(wp));
-    		tween = ntween;
+    		}(wp)); //<- this is gross and weird and note to self: find out if there's a less unreadable way to do this (is this a closure?  what is a closure?)
+			if(wp != wp.length -1){
+				//tween.chain(game.add.tween(star).to());
+				ntween = game.add.tween(star)
+				tween.chain(ntween);
+    			tween = ntween;
+    		}
     	}
     	otween.start()
 		//star.body.gravity.y = 190;
@@ -62,7 +65,7 @@ function preload() {
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
-    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    game.load.spritesheet('dude', 'assets/rectangle.png', 10, 48);
 
 }
 

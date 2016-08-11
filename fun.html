@@ -14,7 +14,7 @@
 <div style=" margin: 30px 30px 30px 30px; border: 5px solid black; width: 0 auto; display:inline-block" onclick=alert("hi")>Hey</div>
 <script type="text/javascript">
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 path = [[50,50], [50,300], [300,300], [300, 50], [150, 50], [150, 500], [20, 500], [20, 350], [400, 350], [400, 550]];
 
@@ -23,40 +23,27 @@ function actionOnClick(){
 	alert("hi");
 }
 
-// function getShortestAngle(from , to){
-// 	if(from - to > 3.14){
-// 		console.log(from + " " + to + " " + 1);
-// 		return 6.28 + to;
-// 	} else if(to - from > 3.14){
-// 		console.log(from + " " + to + " " + 2);		
-// 		return -6.28 + to;
-// 	} else {
-// 		console.log(from + " " + to + " " + 3);		
-// 		return to;
-// 	}
-// }
-function getShortestAngle(angle2, angle1) {
-	console.log(angle1 + " " + angle2);
-		angle1 = angle1*180/3.1415926;
-		angle2 = angle2*180/3.1415926;
-        var difference = angle2 - angle1;
-        var times = Math.floor((difference - (-180)) / 360);
-
-        return angle2 + (difference - (times * 360)) * -1;
-
-    }
-
+function start_delayed(){
+	x = game.time.create();
+	//if(Math.random() < 0.0001){
+		x.add((Math.random()+Math.random()+Math.random()+Math.random())*20+460, start_delayed);
+		x.start();
+	//} else {
+	//	x.add(515, start_delayed);
+	//	x.start();
+	//}
+	start();
+}
 
 function start(){
 	stars = game.add.group();
 	//stars.enableBody = true;
 	for(var i = 0; i < 1; i++){
-		star = stars.create(i * 70, 0, 'dude');
+		var star = stars.create(i * 70, 0, 'dude');
 		star.anchor.setTo(0.5, 0.5);
 
 		star.x = path[0][0];
 		star.y = path[0][1];
-		star.rotation = Phaser.Math.angleBetween(path[1][0], path[1][1], path[0][0], path[0][1]);
 
 		tween = game.add.tween(star);
 		//console.assert(path.length > 1);
@@ -73,16 +60,14 @@ function start(){
     		//	}
     		//}(wp)); //<- this is gross and weird and note to self: find out if there's a less unreadable way to do this (is this a closure?  what is a closure?)
 			if(wp != path.length -1){
-				rotation = Phaser.Math.angleBetween(path[wp+1][0], path[wp+1][1], path[wp][0], path[wp][1]);
-				prevrot = ((wp == 0) ? star.rotation : Phaser.Math.angleBetween(path[wp][0], path[wp][1], path[wp-1][0], path[wp-1][1])); //if performance is ever an issue, then find out where this is stored, or store it.  i'm lazy so this is fine.  even though writing this comment probably took longer than it would have to just cache it.  but whetutevr.
-				ntween = game.add.tween(star).to({angle: getShortestAngle(prevrot, rotation)}, 200, "Linear");
+				console.log("a");
+				rotation = Phaser.Math.angleBetween(path[wp][0], path[wp][1], path[wp-1][0], path[wp-1][1])
+				ntween = game.add.tween(star).to({rotation: Math.abs(rotation-star.rotation) > 3.14 ? -6.28+rotation : rotation}, 200, "Linear");
 				tween.chain(ntween);
 				tween = ntween;
 				ntween = game.add.tween(star)
 				tween.chain(ntween);
     			tween = ntween;
-    		} else {
-    			tween.onComplete.add(function(thing, tweenref){thing.kill();});
     		}
     	}
     	otween.start()
@@ -96,12 +81,14 @@ function preload() {
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
-    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    game.load.spritesheet('dude', 'assets/arrow.png', 10, 48);
+
 }
 
 function create() {
 	button = game.add.button(game.world.centerX - 20, 70, 'dude', start, this, 2, 1, 0);
-	start();
+	//game.time.events.loop(Phaser.Timer.SECOND * 0.48, start_delayed, this);
+	start_delayed();
 }
 
 function update() {
@@ -125,11 +112,6 @@ function update() {
 	// game.physics.arcade.overlap(player, stars, collectStar, null, this);
 }
 
-function render() {
-    // Sprite debug info
-    game.debug.spriteInfo(star, 32, 32);
-
-}
 </script>
 
 </body>

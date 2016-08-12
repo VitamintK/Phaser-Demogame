@@ -23,28 +23,40 @@ function actionOnClick(){
 	alert("hi");
 }
 
-// function getShortestAngle(from , to){
-// 	if(from - to > 3.14){
-// 		console.log(from + " " + to + " " + 1);
-// 		return 6.28 + to;
-// 	} else if(to - from > 3.14){
-// 		console.log(from + " " + to + " " + 2);		
-// 		return -6.28 + to;
-// 	} else {
-// 		console.log(from + " " + to + " " + 3);		
-// 		return to;
-// 	}
-// }
-function getShortestAngle(angle2, angle1) {
-	console.log(angle1 + " " + angle2);
-		angle1 = angle1*180/3.1415926;
-		angle2 = angle2*180/3.1415926;
-        var difference = angle2 - angle1;
-        var times = Math.floor((difference - (-180)) / 360);
+function getShortestAngle(from , to){
+	//bug/weird behavior: Phaser.Math.angleBetween's behavior with respect to 180/-180 (seems to always be 180) is different from sprite.angle which seems so only be -180?
 
-        return angle2 + (difference - (times * 360)) * -1;
+	from = from*180/Math.PI;
+	to = to*180/Math.PI;
+	if(from == 180){
+		from = -180;
+	}
+	if(to == 180){
+		to = -180;
+	 }
+	if(from - to > 180){
+		console.log(from + " " + to + " " + 1);
+		return 360 + to;
+	} else if(to - from > 180){
+		console.log(from + " " + to + " " + 2);		
+		return -360 + to;
+	} else {
+		console.log(from + " " + to + " " + 3);
+		return to;
+	}
+}
+// function getShortestAngle(angle1, angle2) {
+// 	//console.log(angle1 + " " + angle2);
+// 		angle1 = angle1*180/3.1415926;
+// 		angle2 = angle2*180/3.1415926;
+// 			console.log(angle1 + " " + angle2);
 
-    }
+//         var difference = angle2 - angle1;
+//         var times = Math.floor((difference - (-180)) / 360);
+
+//         return angle2 + (difference - (times * 360)) * -1;
+
+//     }
 
 
 function start(){
@@ -56,7 +68,7 @@ function start(){
 
 		star.x = path[0][0];
 		star.y = path[0][1];
-		star.rotation = Phaser.Math.angleBetween(path[1][0], path[1][1], path[0][0], path[0][1]);
+		star.rotation = Phaser.Math.angleBetween(path[0][0], path[0][1], path[1][0], path[1][1]);
 
 		tween = game.add.tween(star);
 		//console.assert(path.length > 1);
@@ -73,8 +85,8 @@ function start(){
     		//	}
     		//}(wp)); //<- this is gross and weird and note to self: find out if there's a less unreadable way to do this (is this a closure?  what is a closure?)
 			if(wp != path.length -1){
-				rotation = Phaser.Math.angleBetween(path[wp+1][0], path[wp+1][1], path[wp][0], path[wp][1]);
-				prevrot = ((wp == 0) ? star.rotation : Phaser.Math.angleBetween(path[wp][0], path[wp][1], path[wp-1][0], path[wp-1][1])); //if performance is ever an issue, then find out where this is stored, or store it.  i'm lazy so this is fine.  even though writing this comment probably took longer than it would have to just cache it.  but whetutevr.
+				rotation = Phaser.Math.angleBetween(path[wp][0], path[wp][1], path[wp+1][0], path[wp+1][1]);
+				prevrot = ((wp == 0) ? star.rotation : Phaser.Math.angleBetween(path[wp-1][0], path[wp-1][1], path[wp][0], path[wp][1])); //if performance is ever an issue, then find out where this is stored, or store it.  i'm lazy so this is fine.  even though writing this comment probably took longer than it would have to just cache it.  but whetutevr.
 				ntween = game.add.tween(star).to({angle: getShortestAngle(prevrot, rotation)}, 200, "Linear");
 				tween.chain(ntween);
 				tween = ntween;

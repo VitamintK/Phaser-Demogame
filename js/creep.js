@@ -1,20 +1,23 @@
-Enemy = function(game, x, y, key, waypoints, velocity_inverse){
+Enemy = function(game, x, y, key, frame, waypoints, velocity_inverse, hp){
 	Phaser.Sprite.call(this, game, x, y, key);	
 	this.velocity_inverse = velocity_inverse;
 	this.waypoints = waypoints;
+	this.health = hp;
 	//this.anchor.setTo(0.5, 0.5);
 }
 Enemy.prototype = Object.create(Phaser.Sprite.prototype);
 Enemy.prototype.constructor = Enemy;
 Enemy.prototype.spawn = function(){
 	this.exists = true;
+	this.alive = true;
 	this.tween.start();
 }
+Enemy.prototype.kill = Enemy.prototype.destroy;
 
 BlandEnemy = function(game){
 }
 
-Wave = function(game, EnemyClass, amount, delay, interval, waypoints, velocity_inverse){
+Wave = function(game, EnemyClass, amount, delay, interval, waypoints, velocity_inverse, hp){
 	Phaser.Group.call(this, game);
 	//this.anchor.setTo(0.5, 0.5);
 	this.classType = EnemyClass;
@@ -23,7 +26,7 @@ Wave = function(game, EnemyClass, amount, delay, interval, waypoints, velocity_i
 	this.interval = interval;
 	this.waypoints = waypoints;
 	for(var i = 0; i < amount; i++){
-		enemy = this.create(0, 0, 'dude', 0, false, waypoints, velocity_inverse);
+		enemy = this.create(0, 0, 'dude', 0, false, waypoints, velocity_inverse, hp);
 		enemy.anchor.setTo(0.5, 0.5);
 
 		enemy.x = waypoints[0][0];
@@ -60,11 +63,14 @@ Wave = function(game, EnemyClass, amount, delay, interval, waypoints, velocity_i
 Wave.prototype = Object.create(Phaser.Group.prototype);
 Wave.prototype.constructor = Wave;
 Wave.prototype.start = function(){
-	this.spawned = 0;
-	game.time.events.repeat(this.interval, this.amount, function(){this.children[this.spawned].spawn();this.spawned++;}, this);
+	//this.spawned = 1;
+	//game.time.events.repeat(this.interval, this.amount, function(){this.children[this.amount - this.spawned].spawn();this.spawned++;}, this);
+	game.time.events.repeat(this.interval, this.amount, this.spawnOne, this);
 }
-Wave.prototype.create = function (x, y, key, frame, exists, waypoints, velocity_inverse) {
-
+Wave.prototype.spawnOne = function(){
+ 	this.getFirstDead().spawn();
+ }
+Wave.prototype.create = function (x, y, key, frame, exists, waypoints, velocity_inverse, hp) {
 	var args = [];
 
     if (arguments.length > 5)
@@ -77,7 +83,7 @@ Wave.prototype.create = function (x, y, key, frame, exists, waypoints, velocity_
 
     if (exists === undefined) { exists = true; }
 
-    var child = new this.classType(this.game, x, y, key, frame, waypoints, velocity_inverse);
+    var child = new this.classType(this.game, x, y, key, frame, waypoints, velocity_inverse, hp);
 
     child.exists = exists;
     child.visible = exists;

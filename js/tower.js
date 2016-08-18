@@ -2,7 +2,7 @@ Tower = function(game, tilex, tiley, key){
 	x = tilex*70;
 	y = tiley*70;
 	Phaser.Sprite.call(this, game, x, y, key);	
-	//this.anchor.setTo(0.5, 0.5);
+	this.anchor.setTo(0.5, 0.5);
 }
 Tower.prototype = Object.create(Phaser.Sprite.prototype);
 Tower.prototype.constructor = Tower;
@@ -20,11 +20,11 @@ FoxTower.prototype.constructor = FoxTower;
 FoxTower.prototype.armUrself = function(){
 	//animation;
 	this.armedState = "ARMING";
-	this.animationArm.play(30, false);
+	this.animationArm.play(10, false);
 }
 FoxTower.prototype.disarmUrself = function(){
 	this.armedState = "DISARMING";
-	this.animationArm.play(30, false); //should be reversed obviously
+	this.animationArm.play(10, false); //should be reversed obviously
 }
 FoxTower.prototype.findTarget = function(){
 	for(i = 0; i < wave1.children.length; i++){
@@ -46,7 +46,7 @@ FoxTower.prototype.update = function(){
 	} else {
 		if(this.armedState == "GUNSIN"){
 			this.armUrself();
-		} else if(this.armedState == "GUNSOUT" && this.timeSinceLastShot>3){
+		} else if(this.armedState == "GUNSOUT" && this.timeSinceLastShot>20){
 			this.fire();
 		}
 	}
@@ -60,12 +60,12 @@ FoxTower.prototype.fire = function(){
 		this.timeSInceLastShot = 0; //? i guess
 	} else {
 		this.timeSinceLastShot = 0;
-				game.add.existing(new FoxLaser(game, this.x, this.y, this.target.x, this.target.y));
+				game.add.existing(new FoxLaser(game, this.x, this.y, this.target.x, this.target.y, this.target));
 	}
-	console.log("bam!");
+	//console.log("bam!");
 }
 
-StraightProjectile = function(game, x0, y0, xf, yf, velocity, key){
+StraightProjectile = function(game, x0, y0, xf, yf, velocity, target, key){
 	//this.vx = vx; //x velocity
 	//this.vy = vy; 
 	//this.xf = xf; //final x position
@@ -74,15 +74,22 @@ StraightProjectile = function(game, x0, y0, xf, yf, velocity, key){
 	Phaser.Sprite.call(this, game, x0, y0, key);
 	this.anchor.setTo(0.5, 0);
 	this.rotation = Phaser.Math.angleBetween(x0, y0, xf, yf) + 3.14/2;
+	this.target = target;
 	tween = game.add.tween(this).to({ x: xf, y: yf}, distance*velocity, "Linear");
+	tween.onComplete.add(this.hit, this);
 	tween.start();
 }
 StraightProjectile.prototype = Object.create(Phaser.Sprite.prototype);
 StraightProjectile.prototype.constructor = StraightProjectile;
-//StraightProjectile.prototype.update = function(){
-//}
-FoxLaser = function(game, x0, y0, xf, yf){
-	StraightProjectile.call(this, game, x0, y0, xf, yf, 2, "foxlaser");
+StraightProjectile.prototype.hit = function(){
+	this.target.damage(20);
+	// console.log(this.target.exists);
+	// console.log(this.target.health);
+	// console.log(this.target.visible);
+	this.destroy();
+}
+FoxLaser = function(game, x0, y0, xf, yf, target){
+	StraightProjectile.call(this, game, x0, y0, xf, yf, 2, target, "foxlaser");
 }
 FoxLaser.prototype = Object.create(StraightProjectile.prototype);
 FoxLaser.prototype.constructor = FoxLaser;

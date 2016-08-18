@@ -12,6 +12,9 @@
 </head>
 <body>
 <div style=" margin: 30px 30px 30px 30px; border: 5px solid black; width: 0 auto; display:inline-block" onclick=alert("hi")>Hey</div>
+<script type="text/javascript" src="js/tower.js"></script>
+<script type="text/javascript" src="js/creep.js"></script>
+
 <script type="text/javascript">
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
@@ -25,7 +28,7 @@ function actionOnClick(){
 
 function getShortestAngle(from , to){
 	//bug/weird behavior: Phaser.Math.angleBetween's behavior with respect to 180/-180 (seems to always be 180) is different from sprite.angle which seems so only be -180?
-
+	//confirmed: if angle is tweened to a hardcoded 180 value, then the angle becomes -180.
 	from = from*180/Math.PI;
 	to = to*180/Math.PI;
 	if(from == 180){
@@ -60,47 +63,10 @@ function getShortestAngle(from , to){
 
 
 function start(){
+	wave1 = new Wave(game, Enemy, 10, 0, 1000, path, 10);
 	stars = game.add.group();
 	//stars.enableBody = true;
-	for(var i = 0; i < 1; i++){
-		star = stars.create(i * 70, 0, 'dude');
-		star.anchor.setTo(0.5, 0.5);
-
-		star.x = path[0][0];
-		star.y = path[0][1];
-		star.rotation = Phaser.Math.angleBetween(path[0][0], path[0][1], path[1][0], path[1][1]);
-
-		tween = game.add.tween(star);
-		//console.assert(path.length > 1);
-		var SpeedGamingConstant = 10//30 //Kappa
-		otween = tween;
-		for(var wp = 1; wp < path.length; wp++){
-			distance = Math.sqrt((path[wp][0] - path[wp-1][0]) * (path[wp][0] - path[wp-1][0]) + (path[wp][1] - path[wp-1][1]) * (path[wp][1] - path[wp-1][1]));
-			tween.to({ x: path[wp][0], y: path[wp][1] }, distance*SpeedGamingConstant, "Linear");
-			//tween.onStart.add(function(wp_){
-    		//	return function(thing, tweenref){
-    		//		thing.rotation = Phaser.Math.angleBetween(path[wp_][0], path[wp_][1],
-    		//		path[wp_-1][0], path[wp_-1][1]);
-    		//		console.log(tweenref.current);
-    		//	}
-    		//}(wp)); //<- this is gross and weird and note to self: find out if there's a less unreadable way to do this (is this a closure?  what is a closure?)
-			if(wp != path.length -1){
-				rotation = Phaser.Math.angleBetween(path[wp][0], path[wp][1], path[wp+1][0], path[wp+1][1]);
-				prevrot = ((wp == 0) ? star.rotation : Phaser.Math.angleBetween(path[wp-1][0], path[wp-1][1], path[wp][0], path[wp][1])); //if performance is ever an issue, then find out where this is stored, or store it.  i'm lazy so this is fine.  even though writing this comment probably took longer than it would have to just cache it.  but whetutevr.
-				ntween = game.add.tween(star).to({angle: getShortestAngle(prevrot, rotation)}, 200, "Linear");
-				tween.chain(ntween);
-				tween = ntween;
-				ntween = game.add.tween(star)
-				tween.chain(ntween);
-    			tween = ntween;
-    		} else {
-    			tween.onComplete.add(function(thing, tweenref){thing.kill();});
-    		}
-    	}
-    	otween.start()
-		//star.body.gravity.y = 190;
-		//star.body.bounce.y = 0.7 + Math.random() * 0.2;
-	}
+	
 }
 
 function preload() {
@@ -109,11 +75,18 @@ function preload() {
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+        game.load.spritesheet('fox', 'assets/dude.png', 32, 48);
+        game.load.image('foxlaser', 'assets/star.png');
+        //game.load.spritesheet('foxlaser', 'assets/rectangle.png', 10, 60);
+
 }
 
 function create() {
 	button = game.add.button(game.world.centerX - 20, 70, 'dude', start, this, 2, 1, 0);
 	start();
+	F = new FoxTower(game, 4, 4);
+    game.add.existing(F);
+
 }
 
 function update() {
@@ -139,7 +112,7 @@ function update() {
 
 function render() {
     // Sprite debug info
-    game.debug.spriteInfo(star, 32, 32);
+    //game.debug.spriteInfo(star, 32, 32);
 
 }
 </script>

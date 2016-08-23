@@ -3,7 +3,9 @@ Enemy = function(game, x, y, key, frame, waypoints, velocity_inverse, hp){
 	this.velocity_inverse = velocity_inverse;
 	this.waypoints = waypoints;
 	this.health = hp;
-	//this.anchor.setTo(0.5, 0.5);
+		this.scale.setTo(0.5);
+
+	this.anchor.setTo(0.5, 0.5);
 }
 Enemy.prototype = Object.create(Phaser.Sprite.prototype);
 Enemy.prototype.constructor = Enemy;

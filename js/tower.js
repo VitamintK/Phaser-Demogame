@@ -1,11 +1,14 @@
 Tower = function(game, tilex, tiley, key){
-	x = tilex*70;
-	y = tiley*70;
+	x = tilex*50 + 25;
+	y = tiley*50 + 25;
 	Phaser.Sprite.call(this, game, x, y, key);	
 	this.anchor.setTo(0.5, 0.5);
 }
 Tower.prototype = Object.create(Phaser.Sprite.prototype);
 Tower.prototype.constructor = Tower;
+//Tower.prototype.add = function(game, tilex, tiley){
+//	(game, tilex, tiley)
+//}
 
 FoxTower = function(game, tilex, tiley){
 	Tower.call(this, game, tilex, tiley, "fox");

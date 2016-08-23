@@ -11,15 +11,20 @@
     </style>
 </head>
 <body>
-<div style=" margin: 30px 30px 30px 30px; border: 5px solid black; width: 0 auto; display:inline-block" onclick=alert("hi")>Hey</div>
+<!-- <div style=" margin: 30px 30px 30px 30px; border: 5px solid black; width: 0 auto; display:inline-block" onclick=alert("hi")>Hey</div> -->
 <script type="text/javascript" src="js/tower.js"></script>
 <script type="text/javascript" src="js/creep.js"></script>
 
 <script type="text/javascript">
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
+var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
 
-path = [[50,50], [50,300], [300,300], [300, 50], [150, 50], [150, 500], [20, 500], [20, 350], [400, 350], [400, 550]];
+path = [[50, 50], [50, 300], [300, 300], [300, 50], [150, 50], [150, 500], [0, 500], [0, 350], [400, 350], [400, 550]];
+for(i = 0; i < path.length; i++){
+	path[i][0]+=25;
+	path[i][1]+=25;
+}
+wp = [[1, 1], [1, 6], [6, 6], [6, 1], [3, 1], [3, 10], [0, 10], [0, 7], [8, 7], [8, 11]];
 
 
 function actionOnClick(){
@@ -38,13 +43,13 @@ function getShortestAngle(from , to){
 		to = -180;
 	 }
 	if(from - to > 180){
-		console.log(from + " " + to + " " + 1);
+		//console.log(from + " " + to + " " + 1);
 		return 360 + to;
 	} else if(to - from > 180){
-		console.log(from + " " + to + " " + 2);		
+		//console.log(from + " " + to + " " + 2);		
 		return -360 + to;
 	} else {
-		console.log(from + " " + to + " " + 3);
+		//console.log(from + " " + to + " " + 3);
 		return to;
 	}
 }
@@ -61,6 +66,24 @@ function getShortestAngle(from , to){
 
 //     }
 
+function make_tilemap_from_waypoints(waypoints, tilemap){
+	for(i = 0; i < waypoints.length -1; i++){
+		if(waypoints[i][0] == waypoints[i+1][0]){
+			sign = (waypoints[i+1][1] - waypoints[i][1])/Math.abs(waypoints[i+1][1] - waypoints[i][1])
+			for(j = waypoints[i][1]; j*sign <= waypoints[i+1][1]*sign; j+=sign){
+				tilemap.putTile(10, waypoints[i][0], j);
+			}
+		} else if(waypoints[i][1] == waypoints[i+1][1]){
+			sign = (waypoints[i+1][0] - waypoints[i][0])/Math.abs(waypoints[i+1][0] - waypoints[i][0])
+			for(j = waypoints[i][0]; j*sign <= waypoints[i+1][0]*sign; j+=sign){
+				tilemap.putTile(10, j, waypoints[i][1]);
+			}
+		} else {
+			console.log("fucked up make_tilemap_from_waypoints: not straight lines.")
+			return null;
+		}
+	}
+}
 
 function start(){
 	wave1 = new Wave(game, Enemy, 10, 0, 1000, path, 10, 100);
@@ -74,18 +97,60 @@ function preload() {
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
+        game.load.image('tower_select', 'assets/tower_select.png');
+
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
         game.load.spritesheet('fox', 'assets/dude.png', 32, 48);
         game.load.image('foxlaser', 'assets/star.png');
         //game.load.spritesheet('foxlaser', 'assets/rectangle.png', 10, 60);
+        game.load.tilemap('desert', 'assets/tilemaps/maps/desert.json', null, Phaser.Tilemap.TILED_JSON);
+            game.load.image('tiles', 'assets/tilemaps/tiles/tmw_desert_spacing.png');
 
 }
 
 function create() {
+map = game.add.tilemap('desert');
+            map.addTilesetImage('Desert', 'tiles');
+            layer = map.createLayer('Ground');
+            //layer.resize(500, 500);
+            //layer.resizeWorld();
+layer.scale.setTo(50/32);
+
 	button = game.add.button(game.world.centerX - 20, 70, 'dude', start, this, 2, 1, 0);
+	t_select = game.add.button(game.world.centerX-200, 550, 'tower_select', function(){}, this);
+	t_select.scale.setTo(0.2,0.2)
 	start();
 	F = new FoxTower(game, 4, 4);
     game.add.existing(F);
+
+    make_tilemap_from_waypoints(wp, map);
+
+    createTileSelector();
+    game.input.addMoveCallback(updateMarker, this);
+}
+
+function createTileSelector(){
+	marker = game.add.graphics();
+    marker.lineStyle(2, 0x000000, 1);
+    marker.drawRect(0, 0, 50, 50);
+}
+
+function updateMarker() {
+//console.log(layer);
+	console.log(game.input.activePointer.x, game.input.activePointer.y);
+		console.log(game.input.activePointer.worldX, game.input.activePointer.worldY);
+
+    marker.x = layer.getTileX(game.input.activePointer.x * 3.2/5) * 50;
+    marker.y = layer.getTileY(game.input.activePointer.y * 3.2/5) * 50;
+
+    if (game.input.mousePointer.isDown)
+    {
+    	console.log("df");
+    	F = new FoxTower(game, layer.getTileX(game.input.activePointer.x * 3.2/5), layer.getTileY(game.input.activePointer.y * 3.2/5));
+    	game.add.existing(F);
+        //map.putTile(currentTile, currentLayer.getTileX(marker.x), currentLayer.getTileY(marker.y), currentLayer);
+        // map.fill(currentTile, currentLayer.getTileX(marker.x), currentLayer.getTileY(marker.y), 4, 4, currentLayer);
+    }
 
 }
 

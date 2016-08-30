@@ -1,9 +1,15 @@
+
+
 Tower = function(game, tilex, tiley, key){
-	x = tilex*50 + 25;
-	y = tiley*50 + 25;
+	x = tilex*TILESIZE + TILESIZE/2;
+	y = tiley*TILESIZE + TILESIZE/2;
 	Phaser.Sprite.call(this, game, x, y, key);	
 	this.anchor.setTo(0.5, 0.5);
+	game.towers_forbidden.push([tilex, tiley]);
 }
+//Tower.attempt_new = function(game, tilex, tiley){
+//	new this(game, tilex, tiley);
+//}
 Tower.prototype = Object.create(Phaser.Sprite.prototype);
 Tower.prototype.constructor = Tower;
 //Tower.prototype.add = function(game, tilex, tiley){
@@ -11,13 +17,16 @@ Tower.prototype.constructor = Tower;
 //}
 
 FoxTower = function(game, tilex, tiley){
-	Tower.call(this, game, tilex, tiley, "fox");
+	Tower.call(this, game, tilex, tiley, this.constructor.key);
 	this.armedState = "GUNSIN";  //"GUNSOUT", "ARMING", "DISARMING"
 	this.timeSinceLastShot = 0;  // //this is not technically true, but ugh I can't think of a better way to do this
 
 	this.animationArm = this.animations.add('arm');
 	this.animationArm.onComplete.add(function(){this.armedState="GUNSOUT";this.fire();}, this);
+	this.dmg = 8;
 }
+FoxTower.key = "fox";
+FoxTower.cost = 5;
 FoxTower.prototype = Object.create(Tower.prototype);
 FoxTower.prototype.constructor = FoxTower;
 FoxTower.prototype.armUrself = function(){
@@ -30,10 +39,10 @@ FoxTower.prototype.disarmUrself = function(){
 	this.animationArm.play(10, false); //should be reversed obviously
 }
 FoxTower.prototype.findTarget = function(){
-	for(i = 0; i < wave1.children.length; i++){
-		enemy = wave1.children[i];
+	for(i = 0; i < wave.children.length; i++){
+		enemy = wave.children[i];
 		if(Phaser.Math.distance(enemy.x, enemy.y, this.x, this.y) < 150){//100
-			this.target = wave1.children[i];
+			this.target = wave.children[i];
 			return this.target;
 		}
 	}
@@ -63,16 +72,17 @@ FoxTower.prototype.fire = function(){
 		this.timeSInceLastShot = 0; //? i guess
 	} else {
 		this.timeSinceLastShot = 0;
-				game.add.existing(new FoxLaser(game, this.x, this.y, this.target.x, this.target.y, this.target));
+				game.add.existing(new FoxLaser(game, this.x, this.y, this.target.x, this.target.y, this.target, this.dmg));
 	}
 	//console.log("bam!");
 }
 
-StraightProjectile = function(game, x0, y0, xf, yf, velocity, target, key){
+StraightProjectile = function(game, x0, y0, xf, yf, velocity, target, dmg, key){
 	//this.vx = vx; //x velocity
 	//this.vy = vy; 
 	//this.xf = xf; //final x position
 	//this.yf = yf;
+	this.dmg = dmg;
 	distance = Math.sqrt((xf-x0)*(xf-x0) + (yf - y0)*(yf-y0));
 	Phaser.Sprite.call(this, game, x0, y0, key);
 	this.anchor.setTo(0.5, 0);
@@ -85,14 +95,14 @@ StraightProjectile = function(game, x0, y0, xf, yf, velocity, target, key){
 StraightProjectile.prototype = Object.create(Phaser.Sprite.prototype);
 StraightProjectile.prototype.constructor = StraightProjectile;
 StraightProjectile.prototype.hit = function(){
-	this.target.damage(20);
+	this.target.damage(this.dmg);
 	// console.log(this.target.exists);
 	// console.log(this.target.health);
 	// console.log(this.target.visible);
 	this.destroy();
 }
-FoxLaser = function(game, x0, y0, xf, yf, target){
-	StraightProjectile.call(this, game, x0, y0, xf, yf, 2, target, "foxlaser");
+FoxLaser = function(game, x0, y0, xf, yf, target, dmg){
+	StraightProjectile.call(this, game, x0, y0, xf, yf, 2, target, dmg, "foxlaser");
 }
 FoxLaser.prototype = Object.create(StraightProjectile.prototype);
 FoxLaser.prototype.constructor = FoxLaser;

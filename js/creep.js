@@ -14,7 +14,10 @@ Enemy.prototype.spawn = function(){
 	this.alive = true;
 	this.tween.start();
 }
-Enemy.prototype.kill = Enemy.prototype.destroy;
+Enemy.prototype.kill = function(){
+	game.cash+=2;
+	this.destroy();
+}
 
 BlandEnemy = function(game){
 }
@@ -56,15 +59,18 @@ Wave = function(game, EnemyClass, amount, delay, interval, waypoints, velocity_i
     		}
     	}
 	}
-	if(delay){
-		game.time.events.add(delay, this.start, this);
-	} else {
-		this.start();
-	}
+	
 }
 Wave.prototype = Object.create(Phaser.Group.prototype);
 Wave.prototype.constructor = Wave;
 Wave.prototype.start = function(){
+	if(this.delay){
+		game.time.events.add(this.delay, this.start_spawning, this);
+	} else {
+		this.start_spawning();
+	}
+}
+Wave.prototype.start_spawning = function(){
 	//this.spawned = 1;
 	//game.time.events.repeat(this.interval, this.amount, function(){this.children[this.amount - this.spawned].spawn();this.spawned++;}, this);
 	game.time.events.repeat(this.interval, this.amount, this.spawnOne, this);
@@ -114,4 +120,11 @@ Wave.prototype.create = function (x, y, key, frame, exists, waypoints, velocity_
 
 };
 
+WaveManager = function(game, waves){
+}
+WaveManager.prototype.constructor = WaveManager;
+WaveManager.prototype.getNextWave = function(){
 
+}
+
+DemoWaveManager = function(game){}

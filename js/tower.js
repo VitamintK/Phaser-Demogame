@@ -39,10 +39,10 @@ FoxTower.prototype.disarmUrself = function(){
 	this.animationArm.play(10, false); //should be reversed obviously
 }
 FoxTower.prototype.findTarget = function(){
-	for(i = 0; i < wave.children.length; i++){
-		enemy = wave.children[i];
+	for(i = 0; i < game.enemies.children.length; i++){
+		enemy = game.enemies.children[i];
 		if(Phaser.Math.distance(enemy.x, enemy.y, this.x, this.y) < 150){//100
-			this.target = wave.children[i];
+			this.target = game.enemies.children[i];
 			return this.target;
 		}
 	}

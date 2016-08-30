@@ -22,6 +22,7 @@ var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create
 var TILESIZE = 32;
 var NATIVETILESIZE = 32;
 var RATIO = NATIVETILESIZE/TILESIZE;
+
 //path = [[50, 50], [50, 300], [300, 300], [300, 50], [150, 50], [150, 500], [0, 500], [0, 350], [400, 350], [400, 550]];
 
 wp = [[1, 1], [1, 12], [12, 12], [12, 1], [6, 1], [6, 20], [0, 20], [0, 14], [16, 14], [16, 22]];
@@ -141,7 +142,7 @@ function preload() {
         //game.load.spritesheet('foxlaser', 'assets/rectangle.png', 10, 60);
         game.load.tilemap('desert', 'assets/tilemaps/maps/desert.json', null, Phaser.Tilemap.TILED_JSON);
             game.load.image('tiles', 'assets/tilemaps/tiles/tmw_desert_spacing.png');
-
+	game.load.spritesheet('button', 'assets/firstaid.png', 32, 48)
 }
 
 function create() {
@@ -152,10 +153,9 @@ map = game.add.tilemap('desert');
             //layer.resizeWorld();
 layer.scale.setTo(TILESIZE/NATIVETILESIZE);
 
-	button = game.add.button(game.world.centerX - 20, 70, 'dude', start, this, 2, 1, 0);
+	button = game.add.button(game.world.centerX - 20, 70, 'button', start, this, 2, 1, 0);
 	t_select = game.add.button(game.world.centerX-200, 550, 'tower_select', function(){}, this);
 	t_select.scale.setTo(0.2,0.2)
-	start();
 	//F = new FoxTower(game, 4, 4);
     //game.add.existing(F);
 
@@ -166,7 +166,8 @@ layer.scale.setTo(TILESIZE/NATIVETILESIZE);
     game.input.addMoveCallback(updateMarker, this);
     //waves = 
     	game.cash = 48;
-    enemies = game.add.group();
+    	game.enemies = game.add.group();
+  	start();
 }
 
 function createTileSelector(){
@@ -222,7 +223,8 @@ function render() {
     // Sprite debug info
     //game.debug.spriteInfo(star, 32, 32);
     game.debug.text('$' + game.cash, 50, 50);
-
+    game.debug.text('press first aid to spawn new wave.', 400, 50);
+    game.debug.text(' try to get to $400', 420, 100)
 }
 </script>
 

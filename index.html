@@ -2,7 +2,7 @@
 <html lang="en"> 
 <head> 
 	<meta charset="UTF-8" />
-	<title>SMASH TD</title>
+	<title>clicker td</title>
 	<script type="text/javascript" src="js/phaser.js">//change to min later</script>
     <style type="text/css">
         body {
@@ -16,13 +16,13 @@
 <script type="text/javascript" src="js/creep.js"></script>
 
 <script type="text/javascript">
-//TODO: tower placement on release, not on mouse move.
+//TODO: tower placement on release, not on mouse move. (or on finger tap i guess but not important)
+//when tabbing out and setting 	game.stage.disableVisibilityChange = true;, weird stuff happens (all creeps clump onto one point).
+//70 seconds per wave too long
 var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
-
 var TILESIZE = 32;
 var NATIVETILESIZE = 32;
 var RATIO = NATIVETILESIZE/TILESIZE;
-
 //path = [[50, 50], [50, 300], [300, 300], [300, 50], [150, 50], [150, 500], [0, 500], [0, 350], [400, 350], [400, 550]];
 
 wp = [[1, 1], [1, 12], [12, 12], [12, 1], [6, 1], [6, 20], [0, 20], [0, 14], [16, 14], [16, 22]];
@@ -57,6 +57,32 @@ game.attempt_tower = function(tilex, tiley, tower_class){
 		game.add.existing(F);
 	}
 }
+
+game.lose_lives = function(num_of_lives){
+	game.lives-=num_of_lives;
+	if(game.lives <= 0){
+		game.state.start("dead");
+	}
+}
+
+function firstWave(game){
+	game.time_start = game.time.time;
+	game.has_began = true;
+}
+// var waveStarted = function(game){
+	
+// }
+// waveStarted.prototype = {
+// 	preload: function(){
+
+// 	},
+// 	create: function(){
+// 	},
+// 	render: function(){
+// 		game.debug.text((Math.floor(this.game.time.elapsedSince(this.game.time_start)/100)/10).toPrecision(2), 400, 50);
+
+// 	}
+// }
 
 function actionOnClick(){
 	alert("hi");
@@ -126,7 +152,8 @@ function start(){
 	wave.start();
 	//stars = game.add.group();
 	//stars.enableBody = true;
-	
+	game.waves_spawned++;
+	if(!game.has_began){firstWave(game);}
 }
 
 function preload() {
@@ -146,6 +173,8 @@ function preload() {
 }
 
 function create() {
+	game.stage.disableVisibilityChange = true;
+
 map = game.add.tilemap('desert');
             map.addTilesetImage('Desert', 'tiles');
             layer = map.createLayer('Ground');
@@ -153,9 +182,10 @@ map = game.add.tilemap('desert');
             //layer.resizeWorld();
 layer.scale.setTo(TILESIZE/NATIVETILESIZE);
 
-	button = game.add.button(game.world.centerX - 20, 70, 'button', start, this, 2, 1, 0);
-	t_select = game.add.button(game.world.centerX-200, 550, 'tower_select', function(){}, this);
-	t_select.scale.setTo(0.2,0.2)
+	button = game.add.button(game.world.centerX - 20 , 70 + 50, 'button', start, this, 2, 1, 0);
+	//t_select = game.add.button(game.world.centerX-200, 550, 'tower_select', function(){}, this); CHAR SELECT
+	//t_select.scale.setTo(0.2,0.2)
+	
 	//F = new FoxTower(game, 4, 4);
     //game.add.existing(F);
 
@@ -165,29 +195,59 @@ layer.scale.setTo(TILESIZE/NATIVETILESIZE);
     createTileSelector();
     game.input.addMoveCallback(updateMarker, this);
     //waves = 
-    	game.cash = 48;
+    //game.state.add("WaveStarted", waveStarted);
+    	game.has_began = false;
+    	game.cash = 44;
+    	game.lives = 5;
+    	game.waves_spawned = 0;
     	game.enemies = game.add.group();
-  	start();
+  	//start();
 }
 
 function createTileSelector(){
 	marker = game.add.graphics();
     marker.lineStyle(2, 0x000000, 1);
     marker.drawRect(0, 0, TILESIZE, TILESIZE);
+    //range indicator
+    //indicator's z should be above that of towers, and basically everything except ui elements.  i think
+    indicator = game.add.graphics();
+    indicator.lineStyle(0);
+    indicator.beginFill(0xFFFF0B, 0.45);
+    indicator.drawCircle(TILESIZE/2, TILESIZE/2, 240);
+    indicator.endFill();
+    game.marker = marker;
+    game.indicator = indicator;
 }
 
 function updateMarker() {
 //console.log(layer);
 	//console.log(game.input.activePointer.x, game.input.activePointer.y);
 	//	console.log(game.input.activePointer.worldX, game.input.activePointer.worldY);
-
+	tilex = layer.getTileX(game.input.activePointer.x * RATIO);
+	tiley = layer.getTileY(game.input.activePointer.y * RATIO);
 	if(true){ //tower placement state
-	    marker.x = layer.getTileX(game.input.activePointer.x * RATIO) * TILESIZE;
-	    marker.y = layer.getTileY(game.input.activePointer.y * RATIO) * TILESIZE;
+		game.marker.x = tilex * TILESIZE;
+	    game.marker.y = tiley * TILESIZE;
+	    game.indicator.x = tilex * TILESIZE;
+	    game.indicator.y = tiley * TILESIZE;
+		if(game.inhabited(tilex, tiley)){
+			//game.indicator.visible = false;
+			//game.indicator.graphicsData[0].fillAlpha = 0.1
+			//game.indicator.graphicsData[0].fillColor = 0xFF0000;
+			game.indicator.tint = 0xEE3311;
+			//KLUDGY AND BUGGY!  make new graphics objects instead of trying to change this existing one.
+			//console.log(game.indicator.graphicsData[0].fillColor);
+		} else {	 
+			//game.indicator.visible =true;
+			//game.indicator.graphicsData[0].fillAlpha = 0.5 	
+	    	//game.indicator.graphicsData[0].fillColor = 0x55FF0B;
+	    	game.indicator.tint = 0xFFFFFF; //resets the tint (does nothing) but forces redraw of the color
+	    	//console.log(game.indicator.graphicsData[0].fillColor);
+		}
 
 	    if (game.input.mousePointer.isDown)
 	    {
-	    	console.log("df");
+	    	//console.log("df");
 	    	F = game.attempt_tower(layer.getTileX(game.input.activePointer.x * RATIO), layer.getTileY(game.input.activePointer.y * RATIO), FoxTower);
 	    	//new FoxTower(game, layer.getTileX(game.input.activePointer.x * RATIO), layer.getTileY(game.input.activePointer.y * RATIO));
 	        //map.putTile(currentTile, currentLayer.getTileX(marker.x), currentLayer.getTileY(marker.y), currentLayer);
@@ -223,9 +283,13 @@ function render() {
     // Sprite debug info
     //game.debug.spriteInfo(star, 32, 32);
     game.debug.text('$' + game.cash, 50, 50);
+    game.debug.text(game.lives + ' ' + (game.lives==1?'life':'lives'), 50, 70);
     game.debug.text('press first aid to spawn new wave.', 400, 50);
     game.debug.text(' try to get to $400', 420, 100)
+    game.debug.text((Math.floor(this.game.time.elapsedSince(this.game.time_start)/100)/10) + ' sec', 50, 90);
+    game.debug.text(game.waves_spawned + " waves spawned", 50, 110)
 }
+
 </script>
 
 </body>

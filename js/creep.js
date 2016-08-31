@@ -14,6 +14,10 @@ Enemy.prototype.spawn = function(){
 	this.alive = true;
 	this.tween.start();
 }
+Enemy.prototype.reached_end = function(){
+	game.lose_lives(1);
+	this.destroy();
+}
 Enemy.prototype.kill = function(){
 	game.cash+=2;
 	this.destroy();
@@ -84,7 +88,7 @@ Wave.prototype.spawnOne = function(){
 			tween.chain(ntween);
 			tween = ntween;
 		} else {
-			tween.onComplete.add(function(thing, tweenref){console.log("dead");thing.kill();});
+			tween.onComplete.add(function(thing, tweenref){console.log("reachd end");thing.reached_end();}); //SHOULD BE .DESTROY() INSTEAD
 		}
 	}
 	enemy.spawn();

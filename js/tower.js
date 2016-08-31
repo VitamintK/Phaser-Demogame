@@ -41,7 +41,7 @@ FoxTower.prototype.disarmUrself = function(){
 FoxTower.prototype.findTarget = function(){
 	for(i = 0; i < game.enemies.children.length; i++){
 		enemy = game.enemies.children[i];
-		if(Phaser.Math.distance(enemy.x, enemy.y, this.x, this.y) < 150){//100
+		if(Phaser.Math.distance(enemy.x, enemy.y, this.x, this.y) < 120){//100
 			this.target = game.enemies.children[i];
 			return this.target;
 		}

@@ -19,7 +19,7 @@ Enemy.prototype.reached_end = function(){
 	this.destroy();
 }
 Enemy.prototype.kill = function(){
-	game.cash+=2;
+	game.make_money(2);
 	this.destroy();
 }
 

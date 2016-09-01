@@ -14,12 +14,17 @@
 <!-- <div style=" margin: 30px 30px 30px 30px; border: 5px solid black; width: 0 auto; display:inline-block" onclick=alert("hi")>Hey</div> -->
 <script type="text/javascript" src="js/tower.js"></script>
 <script type="text/javascript" src="js/creep.js"></script>
+<script type="text/javascript" src="js/states/thegame.js"></script>
+<script type="text/javascript" src="js/states/dead.js"></script>
 
 <script type="text/javascript">
 //TODO: tower placement on release, not on mouse move. (or on finger tap i guess but not important)
 //when tabbing out and setting 	game.stage.disableVisibilityChange = true;, weird stuff happens (all creeps clump onto one point).
 //70 seconds per wave too long
-var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
+var game = new Phaser.Game(800, 700, Phaser.AUTO, '');
+game.state.add("theGame", theGame);
+game.state.add("dead", dead);
+game.state.start("theGame");
 var TILESIZE = 32;
 var NATIVETILESIZE = 32;
 var RATIO = NATIVETILESIZE/TILESIZE;
@@ -65,24 +70,38 @@ game.lose_lives = function(num_of_lives){
 	}
 }
 
+game.make_money = function(amount){
+	game.cash+=amount;
+	game.check_money();
+}
+
+game.check_money = function(){
+	if(game.cash > 400){
+		game.win();
+	}
+}
+
+game.win = function(){
+
+}
+
 function firstWave(game){
 	game.time_start = game.time.time;
 	game.has_began = true;
 }
-// var waveStarted = function(game){
-	
-// }
-// waveStarted.prototype = {
-// 	preload: function(){
+//var dead = function(game){
+//	
+//}
+//dead.prototype = {
+ 	//preload: function(){
 
-// 	},
+ 	//},
 // 	create: function(){
 // 	},
 // 	render: function(){
-// 		game.debug.text((Math.floor(this.game.time.elapsedSince(this.game.time_start)/100)/10).toPrecision(2), 400, 50);
 
 // 	}
-// }
+//}
 
 function actionOnClick(){
 	alert("hi");
@@ -148,7 +167,7 @@ function make_tilemap_from_waypoints(waypoints, tilemap){
 
 function start(){
 	//game, EnemyClass, amount, delay, interval, waypoints, velocity_inverse, hp
-	wave = new Wave(game, Enemy, 10, 0, 1000, path, 20, 400);
+	wave = new Wave(game, Enemy, 10, 0, 1000, path, 10, 400); //velocity = 20. changing to 10 temporarily
 	wave.start();
 	//stars = game.add.group();
 	//stars.enableBody = true;
@@ -156,53 +175,7 @@ function start(){
 	if(!game.has_began){firstWave(game);}
 }
 
-function preload() {
 
-    game.load.image('sky', 'assets/sky.png');
-    game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/star.png');
-        game.load.image('tower_select', 'assets/tower_select.png');
-
-    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
-        game.load.spritesheet('fox', 'assets/dude.png', 32, 48);
-        game.load.image('foxlaser', 'assets/star.png');
-        //game.load.spritesheet('foxlaser', 'assets/rectangle.png', 10, 60);
-        game.load.tilemap('desert', 'assets/tilemaps/maps/desert.json', null, Phaser.Tilemap.TILED_JSON);
-            game.load.image('tiles', 'assets/tilemaps/tiles/tmw_desert_spacing.png');
-	game.load.spritesheet('button', 'assets/firstaid.png', 32, 48)
-}
-
-function create() {
-	game.stage.disableVisibilityChange = true;
-
-map = game.add.tilemap('desert');
-            map.addTilesetImage('Desert', 'tiles');
-            layer = map.createLayer('Ground');
-            //layer.resize(500, 500);
-            //layer.resizeWorld();
-layer.scale.setTo(TILESIZE/NATIVETILESIZE);
-
-	button = game.add.button(game.world.centerX - 20 , 70 + 50, 'button', start, this, 2, 1, 0);
-	//t_select = game.add.button(game.world.centerX-200, 550, 'tower_select', function(){}, this); CHAR SELECT
-	//t_select.scale.setTo(0.2,0.2)
-	
-	//F = new FoxTower(game, 4, 4);
-    //game.add.existing(F);
-
-    game.scenery_forbidden = make_tilemap_from_waypoints(wp, map);
-    game.towers_forbidden = [];
-
-    createTileSelector();
-    game.input.addMoveCallback(updateMarker, this);
-    //waves = 
-    //game.state.add("WaveStarted", waveStarted);
-    	game.has_began = false;
-    	game.cash = 44;
-    	game.lives = 5;
-    	game.waves_spawned = 0;
-    	game.enemies = game.add.group();
-  	//start();
-}
 
 function createTileSelector(){
 	marker = game.add.graphics();
@@ -245,7 +218,7 @@ function updateMarker() {
 	    	//console.log(game.indicator.graphicsData[0].fillColor);
 		}
 
-	    if (game.input.mousePointer.isDown)
+	    if (game.input.activePointer.isDown)
 	    {
 	    	//console.log("df");
 	    	F = game.attempt_tower(layer.getTileX(game.input.activePointer.x * RATIO), layer.getTileY(game.input.activePointer.y * RATIO), FoxTower);
@@ -258,37 +231,7 @@ function updateMarker() {
 	}
 }
 
-function update() {
-	// game.physics.arcade.collide(player, platforms);
 
-	// player.body.velocity.x = 0;
-	// if(cursors.left.isDown){
-	// 	player.body.velocity.x = -150;
-	// 	player.animations.play('left');
-	// } else if(cursors.right.isDown){
-	// 	player.body.velocity.x = 150;
-	// 	player.animations.play('right');
-	// } else {
-	// 	player.animations.stop();
-	// 	player.frame = 4;
-	// }
-	// if(cursors.up.isDown && player.body.touching.down){
-	// 	player.body.velocity.y = -350;
-	// }
-	// game.physics.arcade.collide(stars, platforms);
-	// game.physics.arcade.overlap(player, stars, collectStar, null, this);
-}
-
-function render() {
-    // Sprite debug info
-    //game.debug.spriteInfo(star, 32, 32);
-    game.debug.text('$' + game.cash, 50, 50);
-    game.debug.text(game.lives + ' ' + (game.lives==1?'life':'lives'), 50, 70);
-    game.debug.text('press first aid to spawn new wave.', 400, 50);
-    game.debug.text(' try to get to $400', 420, 100)
-    game.debug.text((Math.floor(this.game.time.elapsedSince(this.game.time_start)/100)/10) + ' sec', 50, 90);
-    game.debug.text(game.waves_spawned + " waves spawned", 50, 110)
-}
 
 </script>
 

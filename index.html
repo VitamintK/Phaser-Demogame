@@ -8,6 +8,21 @@
         body {
             margin: 0;
         }
+
+        /**/
+        #modal{
+        	/*position: absolute;
+		    top: 80px;
+		    left:400px;*/
+		    position: relative;
+		    background-color: white;
+		    top:-500px;
+		    left: 200px;
+		    width: 230px;
+		    height: 76px;
+		    border: 3px solid #000;
+		    text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -16,6 +31,8 @@
 <script type="text/javascript" src="js/creep.js"></script>
 <script type="text/javascript" src="js/states/thegame.js"></script>
 <script type="text/javascript" src="js/states/dead.js"></script>
+<script type="text/javascript" src="js/states/win.js"></script>
+
 
 <script type="text/javascript">
 //TODO: tower placement on release, not on mouse move. (or on finger tap i guess but not important)
@@ -24,6 +41,7 @@
 var game = new Phaser.Game(800, 700, Phaser.AUTO, '');
 game.state.add("theGame", theGame);
 game.state.add("dead", dead);
+game.state.add("win", win);
 game.state.start("theGame");
 var TILESIZE = 32;
 var NATIVETILESIZE = 32;
@@ -63,10 +81,14 @@ game.attempt_tower = function(tilex, tiley, tower_class){
 	}
 }
 
+game.calculate_time_rounded = function(gametimestart){
+        return (Math.floor(game.time.elapsedSince(gametimestart)/100)/10);
+    }
+    
 game.lose_lives = function(num_of_lives){
 	game.lives-=num_of_lives;
 	if(game.lives <= 0){
-		game.state.start("dead");
+		game.state.start("dead", true, false, game.calculate_time_rounded(game.time_start));
 	}
 }
 
@@ -82,7 +104,7 @@ game.check_money = function(){
 }
 
 game.win = function(){
-
+	game.state.start("win", true, false, game.calculate_time_rounded(game.time_start));
 }
 
 function firstWave(game){
@@ -167,7 +189,7 @@ function make_tilemap_from_waypoints(waypoints, tilemap){
 
 function start(){
 	//game, EnemyClass, amount, delay, interval, waypoints, velocity_inverse, hp
-	wave = new Wave(game, Enemy, 10, 0, 1000, path, 10, 400); //velocity = 20. changing to 10 temporarily
+	wave = new Wave(game, Enemy, 10, 0, 1000, path, 12, 400); //velocity = 20. changing to 10 temporarily  10 is actually kinda cool and 20 is maybe too slow.
 	wave.start();
 	//stars = game.add.group();
 	//stars.enableBody = true;
@@ -234,6 +256,18 @@ function updateMarker() {
 
 
 </script>
+<script src="https://www.gstatic.com/firebasejs/3.3.2/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyDFJDDCS_p20pbdZknu1flAi-4fzH2E4KA",
+    authDomain: "tower-defense-88e89.firebaseapp.com",
+    databaseURL: "https://tower-defense-88e89.firebaseio.com",
+    storageBucket: "tower-defense-88e89.appspot.com",
+  };
+  firebase.initializeApp(config);
+    var database = firebase.database();
 
+</script>
 </body>
 </html>

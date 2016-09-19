@@ -20,6 +20,7 @@ theGame.prototype = {
     },
 
     create: function() {
+            game.time.advancedTiming = true;//ONLY FOR DEBUGGING THE TIME.  THIS DOES NOTHING ELSE (to my knowledge)
     	game.stage.disableVisibilityChange = true;
 
         map = game.add.tilemap('desert');
@@ -75,11 +76,13 @@ theGame.prototype = {
     render: function() {
         // Sprite debug info
         //game.debug.spriteInfo(star, 32, 32);
+        game.debug.text(game.time.fps, 2, 14, "#00ff00");
         game.debug.text('$' + game.cash, 50, 50);
         game.debug.text(game.lives + ' ' + (game.lives==1?'life':'lives'), 50, 70);
         game.debug.text('press first aid to spawn new wave.', 400, 50);
         game.debug.text(' try to get to $400', 420, 100)
-        game.debug.text((Math.floor(this.game.time.elapsedSince(this.game.time_start)/100)/10) + ' sec', 50, 90);
+        game.debug.text( game.calculate_time_rounded(this.game.time_start) + ' sec', 50, 90);
         game.debug.text(game.waves_spawned + " waves spawned", 50, 110)
     }
+
 }
